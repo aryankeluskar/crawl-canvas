@@ -1,14 +1,14 @@
 {
     "builds": [
         {
-            "src": "api.py",
+            "src": "canvas.py",
             "use": "@vercel/python"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "api.py"
+            "dest": "canvas.py"
         }
     ]
 }
