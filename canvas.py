@@ -67,10 +67,16 @@ def get_courses():
                     course["name"]: course["id"]
                 })
 
-        # Only write to file if we have data
+        # Only write to file if we have data and the filesystem is writable
         if out:
-            with open("courses.json", "w") as f:
-                json.dump(out, f)
+            try:
+                is_writable = os.access(os.getcwd(), os.W_OK)
+                if is_writable:
+                    with open("courses.json", "w") as f:
+                        json.dump(out, f)
+                    print("Saved courses data to courses.json")
+            except Exception as e:
+                print(f"Warning: Could not save courses to file: {e}")
         else:
             print("Warning: No courses found in Canvas API response")
             # Return mock data if no courses found
@@ -127,10 +133,16 @@ def get_modules(course_id):
 
         modules = response.json()
         
-        # Only write to file if we have data
+        # Only write to file if we have data and the filesystem is writable
         if modules:
-            with open("modules.json", "w") as f:
-                json.dump(modules, f)
+            try:
+                is_writable = os.access(os.getcwd(), os.W_OK)
+                if is_writable:
+                    with open("modules.json", "w") as f:
+                        json.dump(modules, f)
+                    print(f"Saved modules data for course {course_id} to modules.json")
+            except Exception as e:
+                print(f"Warning: Could not save modules to file: {e}")
         else:
             print(f"Warning: No modules found for course {course_id}")
             # Return mock data
@@ -708,9 +720,18 @@ def find_resources(query, image_path=None):
     
     # Return results, or an error if none found
     if all_relevant_resources:
-        # save resources to a json file
-        with open(f"resources_{query}.json", "w") as f:
-            json.dump(all_relevant_resources, f)
+        # Try to save resources to a json file, but don't fail if it's not possible (e.g., read-only filesystem)
+        try:
+            # Check if we're in a writable environment before attempting to write
+            is_writable = os.access(os.getcwd(), os.W_OK)
+            if is_writable:
+                safe_query = "".join(c if c.isalnum() else "_" for c in query)[:50]  # Make filename safe
+                with open(f"resources_{safe_query}.json", "w") as f:
+                    json.dump(all_relevant_resources, f)
+                print(f"Saved resources to resources_{safe_query}.json")
+        except Exception as e:
+            # Just log the error but continue
+            print(f"Warning: Could not save resources to file: {e}")
 
         return all_relevant_resources
     else:
