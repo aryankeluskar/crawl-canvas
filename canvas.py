@@ -16,6 +16,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
+# Print Gemini API version for debugging
+try:
+    genai_version = getattr(genai, "__version__", "unknown")
+    print(f"Using google.generativeai version: {genai_version}")
+except Exception as e:
+    print(f"Could not determine google.generativeai version: {e}")
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -346,7 +353,7 @@ def analyze_image_with_gemini(image_path):
         
         # Generate content with the image
         try:
-            response = model.generate_content([prompt, *image_parts], timeout=30)
+            response = model.generate_content([prompt, *image_parts])
             # Extract the query from the response
             return response.text
         except Exception as e:
@@ -421,7 +428,7 @@ def analyze_query_with_gemini(query, courses, course_modules=None):
             """
             
             # Add timeout to prevent hanging requests
-            response = model.generate_content(prompt, timeout=30)
+            response = model.generate_content(prompt)
             try:
                 # Parse the result to get the course
                 result = json.loads(response.text)
@@ -494,7 +501,7 @@ def analyze_query_with_gemini(query, courses, course_modules=None):
             """
             
             # Add timeout to prevent hanging requests
-            response = model.generate_content(prompt, timeout=30)
+            response = model.generate_content(prompt)
             try:
                 # Parse the result to get the modules
                 result = json.loads(response.text)
@@ -605,8 +612,8 @@ def analyze_resource_relevance(query, resource_items, course_name, module_name):
         """
         
         try:
-            # Add timeout to prevent hanging requests
-            response = model.generate_content(prompt, timeout=30)
+            # Generate content without timeout
+            response = model.generate_content(prompt)
             # Parse the result to get the relevant resources
             result = json.loads(response.text)
             return result
