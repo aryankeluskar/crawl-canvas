@@ -402,13 +402,22 @@ def analyze_query_with_gemini(query, courses, course_modules=None):
             "{query}"
             
             Based on this question, which of the following courses is the student most likely referring to? 
+            Be very specific in your match and don't default to the first course unless absolutely necessary.
+            Look for subject matter keywords in the query and match them to the course titles.
+            
             Provide your answer as a JSON object with the fields: 
-            - course_name: The name of the most relevant course
+            - course_name: The name of the most relevant course (MUST exactly match one of the provided course names)
             - confidence: A score from 0-1 indicating your confidence
             - reasoning: A brief explanation of why you chose this course
             
             Available courses:
             {courses_list}
+            
+            Think step by step:
+            1. What subjects or topics does the query mention?
+            2. Which course titles contain similar subjects or topics?
+            3. Only choose a course if you're confident there's a good match
+            4. If there's no clear match, select the most general course that might cover the topic
             """
             
             # Add timeout to prevent hanging requests
@@ -416,6 +425,32 @@ def analyze_query_with_gemini(query, courses, course_modules=None):
             try:
                 # Parse the result to get the course
                 result = json.loads(response.text)
+                
+                # Validate the course name to ensure it's in the list
+                if "course_name" in result and result["course_name"] not in courses:
+                    print(f"Warning: Gemini returned an invalid course name: {result['course_name']}")
+                    
+                    # Try to find a close match
+                    best_match = None
+                    best_score = 0
+                    for name in courses:
+                        # Simple similarity score based on character overlap
+                        similarity = sum(1 for a, b in zip(name.lower(), result["course_name"].lower()) if a == b)
+                        score = similarity / max(len(name), len(result["course_name"]))
+                        if score > best_score:
+                            best_score = score
+                            best_match = name
+                    
+                    if best_score > 0.5:
+                        print(f"Found close match: {best_match} (score: {best_score})")
+                        result["course_name"] = best_match
+                        result["reasoning"] += f" (fixed invalid course name to closest match)"
+                    else:
+                        # Default to first course if no good match
+                        result["course_name"] = list(courses.keys())[0]
+                        result["confidence"] = 0.5
+                        result["reasoning"] = "Default selection (invalid course name from LLM)"
+                
                 return result
             except:
                 # Fallback if the response isn't proper JSON
@@ -451,6 +486,11 @@ def analyze_query_with_gemini(query, courses, course_modules=None):
             
             Available modules:
             {modules_list}
+            
+            Think step by step:
+            1. What specific topics or concepts does the query ask about?
+            2. Which module titles seem to cover these topics?
+            3. Choose modules that are most likely to contain resources answering the query
             """
             
             # Add timeout to prevent hanging requests
@@ -458,6 +498,32 @@ def analyze_query_with_gemini(query, courses, course_modules=None):
             try:
                 # Parse the result to get the modules
                 result = json.loads(response.text)
+                
+                # Validate module names
+                if "module_names" in result:
+                    valid_module_names = [module["name"] for module in course_modules]
+                    valid_results = []
+                    
+                    for name in result["module_names"]:
+                        if name in valid_module_names:
+                            valid_results.append(name)
+                        else:
+                            print(f"Warning: Invalid module name from Gemini: {name}")
+                            # Try to find a close match
+                            for valid_name in valid_module_names:
+                                if name.lower() in valid_name.lower() or valid_name.lower() in name.lower():
+                                    print(f"Found close match: {valid_name}")
+                                    valid_results.append(valid_name)
+                                    break
+                    
+                    # Update with only valid module names
+                    result["module_names"] = valid_results
+                    
+                    # If no valid modules found, include the first module
+                    if not valid_results and course_modules:
+                        result["module_names"] = [course_modules[0]["name"]]
+                        result["relevance_explanations"] = ["Default selection (no valid matches)"]
+                
                 return result
             except:
                 # Fallback if the response isn't proper JSON
@@ -633,47 +699,109 @@ def find_resources(query, image_path=None):
     # Step 1: Get all courses
     courses = get_courses()
     if not courses:
+        print("Error: No courses found from Canvas API")
         return [{"error": "No courses found", "details": "Please check your Canvas API configuration"}]
     
+    # Print available courses for debugging
+    print(f"Available courses: {list(courses.keys())}")
+    
     # Step 2: Analyze the query to identify the relevant course
+    print(f"Analyzing query: '{query}'")
     course_analysis = analyze_query_with_gemini(query, courses)
     course_name = course_analysis.get("course_name")
+    confidence = course_analysis.get("confidence", 0)
+    reasoning = course_analysis.get("reasoning", "No reasoning provided")
     
+    print(f"Course analysis result: {course_name} (confidence: {confidence})")
+    print(f"Reasoning: {reasoning}")
+    
+    # Improved course matching logic
     if course_name not in courses:
-        # If the exact course name wasn't found, try to find a partial match
-        for name in courses:
-            if course_name.lower() in name.lower() or name.lower() in course_name.lower():
-                course_name = name
-                break
+        print(f"Exact course match not found for '{course_name}', trying partial matches")
+        # Try to find a partial match with higher threshold
+        best_match = None
+        best_match_score = 0
         
-        # If still not found, default to the first course
-        if course_name not in courses:
-            course_name = list(courses.keys())[0]
+        for name in courses:
+            # Check for significant word overlap
+            query_words = set(w.lower() for w in query.split() if len(w) > 3)
+            name_words = set(w.lower() for w in name.split() if len(w) > 3)
+            
+            # Calculate overlap score
+            if query_words and name_words:
+                overlap = len(query_words.intersection(name_words))
+                score = overlap / min(len(query_words), len(name_words))
+                print(f"Course: {name}, score: {score}")
+                
+                if score > best_match_score:
+                    best_match_score = score
+                    best_match = name
+            
+            # Also check for simple substring match
+            elif course_name.lower() in name.lower() or name.lower() in course_name.lower():
+                print(f"Substring match found: {name}")
+                if best_match is None:
+                    best_match = name
+        
+        if best_match and best_match_score >= 0.2:
+            print(f"Using best match course: {best_match} (score: {best_match_score})")
+            course_name = best_match
+        elif best_match:
+            print(f"Using substring match course: {best_match}")
+            course_name = best_match
+        else:
+            # If still no match found, check if there's a course related to the query topic
+            query_keywords = [w.lower() for w in query.split() if len(w) > 4]
+            
+            for name in courses:
+                for keyword in query_keywords:
+                    if keyword in name.lower():
+                        print(f"Keyword match found: {name} (keyword: {keyword})")
+                        course_name = name
+                        break
+                if course_name in courses:
+                    break
+            
+            # Last resort - default to first course
+            if course_name not in courses:
+                course_name = list(courses.keys())[0]
+                print(f"No matches found, defaulting to first course: {course_name}")
     
     course_id = courses[course_name]
+    print(f"Selected course: {course_name} (ID: {course_id})")
     
     # Step 3: Get modules for the identified course
     modules = get_modules(course_id)
     if not modules:
+        print(f"No modules found for course: {course_name}")
         return [{"error": "No modules found", "course": course_name}]
+    
+    print(f"Found {len(modules)} modules in course {course_name}")
     
     # Step 4: Analyze which modules are most relevant
     module_analysis = analyze_query_with_gemini(query, courses, modules)
     relevant_module_names = module_analysis.get("module_names", [])
     
+    print(f"Relevant module names from analysis: {relevant_module_names}")
+    
     # Map module names to IDs
     relevant_modules = []
     for module in modules:
         if module["name"] in relevant_module_names:
+            print(f"Found exact module match: {module['name']}")
             relevant_modules.append(module)
         # If we can't find exact matches, include modules that contain the query keywords
         elif any(keyword.lower() in module["name"].lower() 
                 for keyword in query.lower().split() if len(keyword) > 3):
+            print(f"Found keyword match in module: {module['name']}")
             relevant_modules.append(module)
     
     # If no relevant modules found, include the first few modules
     if not relevant_modules and modules:
+        print(f"No relevant modules found, using first {min(2, len(modules))} modules")
         relevant_modules = modules[:2]
+    
+    print(f"Selected {len(relevant_modules)} modules for further analysis")
     
     # Step 5: Get items from relevant modules and filter for resources
     all_relevant_resources = []
@@ -682,16 +810,23 @@ def find_resources(query, image_path=None):
         module_id = module["id"]
         module_name = module["name"]
         
+        print(f"Getting items for module: {module_name} (ID: {module_id})")
+        
         # Get all items in this module
         items = get_module_items(course_id, module_id)
         
         if not items:
+            print(f"No items found in module: {module_name}")
             continue
+        
+        print(f"Found {len(items)} items in module: {module_name}")
         
         # Analyze which resources are most relevant within this module
         resource_analysis = analyze_resource_relevance(query, items, course_name, module_name)
         relevant_indices = resource_analysis.get("resource_indices", [])
         relevance_scores = resource_analysis.get("relevance_scores", [])
+        
+        print(f"Relevant indices from analysis: {relevant_indices}")
         
         # Add the relevant resources to our results
         for idx_pos, idx in enumerate(relevant_indices):
@@ -714,12 +849,14 @@ def find_resources(query, image_path=None):
                         resource["url"] = file_url
                 
                 all_relevant_resources.append(resource)
+                print(f"Added resource: {resource['title']} (score: {resource['relevance_score']})")
     
     # Sort resources by relevance score (descending)
     all_relevant_resources.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
     
     # Return results, or an error if none found
     if all_relevant_resources:
+        print(f"Returning {len(all_relevant_resources)} relevant resources")
         # Try to save resources to a json file, but don't fail if it's not possible (e.g., read-only filesystem)
         try:
             # Check if we're in a writable environment before attempting to write
@@ -735,6 +872,7 @@ def find_resources(query, image_path=None):
 
         return all_relevant_resources
     else:
+        print(f"No relevant resources found for query: {query}")
         return [{"error": "No relevant resources found", "query": query, "course": course_name}]
 
 def test_agent():
