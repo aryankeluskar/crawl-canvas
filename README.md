@@ -1,101 +1,127 @@
-# Canvas AI Learning Resource Agent
+# Canvas Crawler
 
-This agent helps students find relevant learning resources for their questions by connecting to Canvas LMS and using Gemini AI to analyze their queries.
+A powerful AI-powered Canvas LMS resource discovery agent that helps students find relevant educational materials based on their queries or uploaded images.
 
 ## Features
 
-- Analyzes student queries to identify the most relevant course
-- Processes images of educational content to understand concepts
-- Finds the most appropriate modules within that course
-- Retrieves and ranks learning resources (videos, PDFs, assignments, etc.)
-- Uses Google's Gemini 2.0 Flash for fast, accurate natural language understanding
+- **Intelligent Course Matching**: Uses Google Gemini AI to analyze student queries and match them to relevant courses
+- **Module-Level Resource Discovery**: Identifies specific modules within courses that contain relevant materials
+- **Multi-modal Input Support**: Accepts both text queries and image uploads for educational content analysis
+- **Canvas API Integration**: Directly integrates with Canvas LMS to fetch real course data, modules, and resources
+- **Relevance Scoring**: AI-powered scoring system to rank resources by relevance to student queries
 
 ## Setup
 
-1. **Install Dependencies**
+### 1. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
-2. **Configure Environment Variables**
+### 2. Authentication
 
-Create a `.env` file in the root directory with your Canvas API key:
+#### Canvas API Authentication
+You can provide your Canvas API key in two ways:
 
+**Option 1: Environment Variables (recommended for production)**
+```bash
+wrangler secret put CANVAS_API_KEY
+# Enter your Canvas API key when prompted
 ```
-CANVAS_API_KEY=your_canvas_api_key_here
+
+**Option 2: Request Headers (useful for personal access tokens)**
+Include one of these headers in your API requests:
+- `Authorization: Bearer YOUR_CANVAS_API_KEY`
+- `Canvas-API-Key: YOUR_CANVAS_API_KEY`
+
+#### Google Generative AI Configuration  
+```bash
+wrangler secret put GOOGLE_API_KEY
+# Enter your Google API key when prompted
 ```
 
-To get your Canvas API key:
-1. Log in to Canvas
-2. Go to Account > Settings
-3. Scroll down to "Approved Integrations"
-4. Click "New Access Token"
-5. Follow the prompts to generate a token
-
-## Usage
-
-### Command-Line Interface
-
-The agent comes with a convenient command-line interface:
+### 3. Development
 
 ```bash
-# Ask a text question
-python canvas_cli.py --query "I don't understand what orthogonalization of matrices mean"
-
-# Analyze an image
-python canvas_cli.py --image "path/to/your/image.png"
-
-# Analyze an image with additional context
-python canvas_cli.py --query "Explain this concept" --image "path/to/your/image.png"
-
-# Run with detailed output
-python canvas_cli.py --query "How do process scheduling algorithms work?" --verbose
-
-# Run test cases
-python canvas_cli.py --test
+npm run dev
 ```
 
-### Python API
+### 4. Deployment
 
-You can also use the agent directly in your Python code:
-
-```python
-from canvas import find_resources
-
-# Find resources for a text question
-resources = find_resources("I don't understand what orthogonalization of matrices mean")
-
-# Find resources for an image
-resources = find_resources("", image_path="path/to/your/image.png")
-
-# Find resources for an image with context
-resources = find_resources("Help me understand this", image_path="path/to/your/image.png")
-
-# Process and display the resources
-for resource in resources:
-    print(f"Title: {resource.get('title')}")
-    print(f"URL: {resource.get('url')}")
-    print(f"Relevance: {resource.get('relevance_score')}")
+```bash
+npm run deploy
 ```
 
-## Testing
+## API Endpoints
 
-The module includes a `test_agent()` function that tests the agent with sample queries from various subjects:
+### GET `/`
+Health check endpoint that returns API status.
 
-```python
-from canvas import test_agent
+### GET `/resources`
+Find educational resources based on a text query or image URL.
 
-test_agent()
+**Query Parameters:**
+- `query` (string, optional): Text query describing what you're looking for
+- `image_url` (string, optional): URL to an educational image to analyze
+
+**Examples:**
+
+Basic query:
+```bash
+curl "https://canvas-crawler.soyrun.workers.dev/resources?query=matrix%20orthogonalization"
 ```
 
-## How It Works
+With Canvas API key in header:
+```bash
+curl -H "Authorization: Bearer YOUR_CANVAS_API_KEY" \
+     "https://canvas-crawler.soyrun.workers.dev/resources?query=matrix%20orthogonalization"
+```
 
-1. If an image is provided, it's analyzed by Gemini Vision to extract the educational concept shown
-2. The agent retrieves all courses from your Canvas account
-3. Gemini AI analyzes the query (text and/or image) to determine the most relevant course
-4. It then fetches all modules from that course
-5. Gemini AI analyzes which modules are most likely to contain relevant information
-6. The agent retrieves items from those modules
-7. Gemini AI ranks the resources by relevance to the student's query
-8. The agent returns a sorted list of the most helpful resources 
+With custom Canvas API key header:
+```bash
+curl -H "Canvas-API-Key: YOUR_CANVAS_API_KEY" \
+     "https://canvas-crawler.soyrun.workers.dev/resources?query=matrix%20orthogonalization"
+```
+
+### POST `/resources`
+Find educational resources with support for base64-encoded images.
+
+**Request Body:**
+```json
+{
+  "query": "How do matrices work?",
+  "image_data": "base64_encoded_image_data",
+  "mime_type": "image/png"
+}
+```
+
+## Response Format
+
+```json
+[
+  {
+    "title": "Matrix Operations Tutorial",
+    "type": "Page",
+    "url": "https://canvas.asu.edu/courses/.../pages/matrix-ops",
+    "course": "Linear Algebra",
+    "module": "Matrix Fundamentals", 
+    "relevance_score": 0.95
+  }
+]
+```
+
+## Architecture
+
+The application is built using:
+- **Hono**: Lightweight web framework for Cloudflare Workers
+- **Google Generative AI**: For intelligent query analysis and image processing
+- **Canvas LMS API**: For fetching course data and educational resources
+- **TypeScript**: For type safety and better development experience
+
+## Configuration
+
+For generating/synchronizing types based on your Worker configuration:
+
+```bash
+npm run cf-typegen
+```

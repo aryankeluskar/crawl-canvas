@@ -1,0 +1,17 @@
+{
+  "name": "canvas-crawler",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.9.5",
+    "@google/generative-ai": "^0.21.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.4.0",
+    "@types/node": "^20.0.0"
+  }
+}
