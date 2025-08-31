@@ -18,6 +18,11 @@ app.get('/', (c) => {
   return c.json({ message: "Canvas Resource API is running. Use /resources endpoint to find resources." });
 });
 
+// Minimal frontend UI
+app.get('/ui', (c) => {
+  return c.html(``);
+});
+
 app.get('/resources', async (c) => {
   try {
     const query = c.req.query('query') || '';

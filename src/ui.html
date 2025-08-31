@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Canvas Crawler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                800: '#3730a3', 900: '#312e81'
+              }
+            },
+            boxShadow: {
+              glow: '0 10px 30px -10px rgba(99,102,241,.35)'
+            }
+          }
+        },
+        darkMode: 'class'
+      };
+    </script>
+    <style>
+      .bg-grid {
+        background-image: radial-gradient(rgba(99,102,241,.25) 1px, transparent 1px);
+        background-size: 22px 22px;
+      }
+    </style>
+  </head>
+  <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased">
+    <div class="absolute inset-0 -z-10 overflow-hidden">
+      <div class="pointer-events-none absolute -top-40 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-brand-400/40 to-brand-600/20 blur-3xl"></div>
+      <div class="pointer-events-none absolute bottom-0 right-0 h-[30rem] w-[30rem] translate-x-1/3 translate-y-1/3 rounded-full bg-gradient-to-tr from-indigo-500/20 to-fuchsia-400/10 blur-3xl"></div>
+    </div>
+
+    <header class="sticky top-0 z-20">
+      <div class="mx-auto max-w-6xl px-4 pt-6">
+        <div class="flex items-center justify-between rounded-lg border border-slate-200/60 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/60">
+          <div class="flex items-center gap-2">
+            <span class="font-bold tracking-tight text-xl ml-3 ">Canvas Crawler</span>
+          </div>
+          <button id="themeToggle" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" aria-label="Toggle theme">
+            <svg id="sunIcon"  xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 50 50">
+                <path d="M 24.90625 3.96875 C 24.863281 3.976563 24.820313 3.988281 24.78125 4 C 24.316406 4.105469 23.988281 4.523438 24 5 L 24 11 C 23.996094 11.359375 24.183594 11.695313 24.496094 11.878906 C 24.808594 12.058594 25.191406 12.058594 25.503906 11.878906 C 25.816406 11.695313 26.003906 11.359375 26 11 L 26 5 C 26.011719 4.710938 25.894531 4.433594 25.6875 4.238281 C 25.476563 4.039063 25.191406 3.941406 24.90625 3.96875 Z M 10.65625 9.84375 C 10.28125 9.910156 9.980469 10.183594 9.875 10.546875 C 9.769531 10.914063 9.878906 11.304688 10.15625 11.5625 L 14.40625 15.8125 C 14.648438 16.109375 15.035156 16.246094 15.410156 16.160156 C 15.78125 16.074219 16.074219 15.78125 16.160156 15.410156 C 16.246094 15.035156 16.109375 14.648438 15.8125 14.40625 L 11.5625 10.15625 C 11.355469 9.933594 11.054688 9.820313 10.75 9.84375 C 10.71875 9.84375 10.6875 9.84375 10.65625 9.84375 Z M 39.03125 9.84375 C 38.804688 9.875 38.59375 9.988281 38.4375 10.15625 L 34.1875 14.40625 C 33.890625 14.648438 33.753906 15.035156 33.839844 15.410156 C 33.925781 15.78125 34.21875 16.074219 34.589844 16.160156 C 34.964844 16.246094 35.351563 16.109375 35.59375 15.8125 L 39.84375 11.5625 C 40.15625 11.265625 40.246094 10.800781 40.0625 10.410156 C 39.875 10.015625 39.460938 9.789063 39.03125 9.84375 Z M 24.90625 15 C 24.875 15.007813 24.84375 15.019531 24.8125 15.03125 C 24.75 15.035156 24.6875 15.046875 24.625 15.0625 C 24.613281 15.074219 24.605469 15.082031 24.59375 15.09375 C 19.289063 15.320313 15 19.640625 15 25 C 15 30.503906 19.496094 35 25 35 C 30.503906 35 35 30.503906 35 25 C 35 19.660156 30.746094 15.355469 25.46875 15.09375 C 25.433594 15.09375 25.410156 15.0625 25.375 15.0625 C 25.273438 15.023438 25.167969 15.003906 25.0625 15 C 25.042969 15 25.019531 15 25 15 C 24.96875 15 24.9375 15 24.90625 15 Z M 24.9375 17 C 24.957031 17 24.980469 17 25 17 C 25.03125 17 25.0625 17 25.09375 17 C 29.46875 17.050781 33 20.613281 33 25 C 33 29.421875 29.421875 33 25 33 C 20.582031 33 17 29.421875 17 25 C 17 20.601563 20.546875 17.035156 24.9375 17 Z M 4.71875 24 C 4.167969 24.078125 3.78125 24.589844 3.859375 25.140625 C 3.9375 25.691406 4.449219 26.078125 5 26 L 11 26 C 11.359375 26.003906 11.695313 25.816406 11.878906 25.503906 C 12.058594 25.191406 12.058594 24.808594 11.878906 24.496094 C 11.695313 24.183594 11.359375 23.996094 11 24 L 5 24 C 4.96875 24 4.9375 24 4.90625 24 C 4.875 24 4.84375 24 4.8125 24 C 4.78125 24 4.75 24 4.71875 24 Z M 38.71875 24 C 38.167969 24.078125 37.78125 24.589844 37.859375 25.140625 C 37.9375 25.691406 38.449219 26.078125 39 26 L 45 26 C 45.359375 26.003906 45.695313 25.816406 45.878906 25.503906 C 46.058594 25.191406 46.058594 24.808594 45.878906 24.496094 C 45.695313 24.183594 45.359375 23.996094 45 24 L 39 24 C 38.96875 24 38.9375 24 38.90625 24 C 38.875 24 38.84375 24 38.8125 24 C 38.78125 24 38.75 24 38.71875 24 Z M 15 33.875 C 14.773438 33.90625 14.5625 34.019531 14.40625 34.1875 L 10.15625 38.4375 C 9.859375 38.679688 9.722656 39.066406 9.808594 39.441406 C 9.894531 39.8125 10.1875 40.105469 10.558594 40.191406 C 10.933594 40.277344 11.320313 40.140625 11.5625 39.84375 L 15.8125 35.59375 C 16.109375 35.308594 16.199219 34.867188 16.039063 34.488281 C 15.882813 34.109375 15.503906 33.867188 15.09375 33.875 C 15.0625 33.875 15.03125 33.875 15 33.875 Z M 34.6875 33.875 C 34.3125 33.941406 34.011719 34.214844 33.90625 34.578125 C 33.800781 34.945313 33.910156 35.335938 34.1875 35.59375 L 38.4375 39.84375 C 38.679688 40.140625 39.066406 40.277344 39.441406 40.191406 C 39.8125 40.105469 40.105469 39.8125 40.191406 39.441406 C 40.277344 39.066406 40.140625 38.679688 39.84375 38.4375 L 35.59375 34.1875 C 35.40625 33.988281 35.148438 33.878906 34.875 33.875 C 34.84375 33.875 34.8125 33.875 34.78125 33.875 C 34.75 33.875 34.71875 33.875 34.6875 33.875 Z M 24.90625 37.96875 C 24.863281 37.976563 24.820313 37.988281 24.78125 38 C 24.316406 38.105469 23.988281 38.523438 24 39 L 24 45 C 23.996094 45.359375 24.183594 45.695313 24.496094 45.878906 C 24.808594 46.058594 25.191406 46.058594 25.503906 45.878906 C 25.816406 45.695313 26.003906 45.359375 26 45 L 26 39 C 26.011719 38.710938 25.894531 38.433594 25.6875 38.238281 C 25.476563 38.039063 25.191406 37.941406 24.90625 37.96875 Z"></path>
+            </svg>
+            <svg id="moonIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13A9 9 0 1111 2.36 7 7 0 0021.64 13z"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="relative">
+      <section class="mx-auto max-w-6xl px-4 pt-16 md:pt-24">
+        <div class="flex flex-col items-center text-center">
+          <h1 class="max-w-3xl text-4xl font-extrabold tracking-tight text-slate-900 drop-shadow-sm md:text-6xl dark:text-white">
+            Find anything in your Canvas courses instantly.
+          </h1>
+          <p class="mt-5 max-w-2xl text-base text-slate-600 md:text-lg dark:text-slate-300">
+            Search across modules, files, pages, and announcements. Paste an optional API key to browse your canvas courses.
+          </p>
+
+          <div class="mt-10 w-full max-w-3xl rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-lg ring-1 ring-brand-500/5 backdrop-blur md:p-6 dark:border-slate-800 dark:bg-slate-900/60">
+            <form id="form" class="space-y-4">
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div class="md:col-span-2">
+                  <label for="query" class="mb-2 block text-left text-sm font-medium text-slate-700 dark:text-slate-200">Query</label>
+                  <input id="query" name="query" type="text" placeholder="e.g. homework 2 instructions" required class="w-full rounded-lg border border-slate-300 bg-white/80 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100" />
+                </div>
+                <div>
+                  <label for="apiKey" class="mb-2 block text-left text-sm font-medium text-slate-700 dark:text-slate-200">Canvas API Key (optional)</label>
+                  <input id="apiKey" name="apiKey" type="password" placeholder="Paste your Canvas token" class="w-full rounded-lg border border-slate-300 bg-white/80 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100" />
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Will be sent as <span class="font-medium">Authorization: Bearer</span> and <span class="font-medium">Canvas-API-Key</span>.</p>
+                <button id="submit" type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:from-brand-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12h13.586l-5.293-5.293 1.414-1.414L20.414 12l-7.707 7.707-1.414-1.414L16.586 13H3z"/></svg>
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="mt-8 w-full max-w-3xl">
+            <pre id="output" class="max-h-[60vh] overflow-auto rounded-xl border border-slate-200 bg-slate-900 p-4 text-sm leading-relaxed text-slate-100 shadow-lg dark:border-slate-800">Results will appear here...</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function() {
+        var root = document.documentElement;
+        var storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          root.classList.add('dark');
+        }
+        var toggle = document.getElementById('themeToggle');
+        if (toggle) {
+          toggle.addEventListener('click', function() {
+            var isDark = root.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            var sun = document.getElementById('sunIcon');
+            var moon = document.getElementById('moonIcon');
+            if (sun && moon) {
+              if (isDark) { sun.classList.add('hidden'); moon.classList.remove('hidden'); }
+              else { sun.classList.remove('hidden'); moon.classList.add('hidden'); }
+            }
+          });
+        }
+
+        var form = document.getElementById('form');
+        var submitBtn = document.getElementById('submit');
+        var output = document.getElementById('output');
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          var queryInput = document.getElementById('query');
+          var apiKeyInput = document.getElementById('apiKey');
+          var q = (queryInput && queryInput.value) ? queryInput.value.trim() : '';
+          var k = (apiKeyInput && apiKeyInput.value) ? apiKeyInput.value.trim() : '';
+          if (!q) {
+            output.textContent = 'Please enter a query.';
+            return;
+          }
+          submitBtn.disabled = true;
+          output.textContent = 'Loading...';
+          var url = '/resources?query=' + encodeURIComponent(q);
+          var headers = {};
+          if (k) {
+            headers['Authorization'] = 'Bearer ' + k;
+            headers['Canvas-API-Key'] = k;
+          }
+          fetch(url, { method: 'GET', headers: headers })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              try {
+                output.textContent = JSON.stringify(data, null, 2);
+              } catch (err) {
+                output.textContent = String(data);
+              }
+            })
+            .catch(function(err) {
+              output.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
+            })
+            .finally(function() {
+              submitBtn.disabled = false;
+            });
+        });
+      })();
+    </script>
+  </body>
+</html>
