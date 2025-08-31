@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { Env } from './types'
 import { findResources } from './resource-finder'
+import { serveStatic } from 'hono/cloudflare-workers'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -15,12 +16,15 @@ app.use('/*', cors({
 
 // API Routes
 app.get('/', (c) => {
-  return c.json({ message: "Canvas Resource API is running. Use /resources endpoint to find resources." });
+  return c.json({ message: "Canvas Resource API is running. Use /resources endpoint to find resources or visit /ui for a frontend interface to test the API." });
 });
 
-// Minimal frontend UI
-app.get('/ui', (c) => {
-  return c.html(``);
+// Serve static HTML from assets (public/ui.html)
+app.get('/ui', async (c) => {
+  const url = new URL('/ui.html', c.req.url);
+  const request = new Request(url.toString(), { headers: c.req.raw.headers });
+  const res = await c.env.ASSETS.fetch(request);
+  return res;
 });
 
 app.get('/resources', async (c) => {

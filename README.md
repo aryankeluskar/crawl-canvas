@@ -2,6 +2,8 @@
 
 A powerful AI-powered Canvas LMS resource discovery agent that helps students find relevant educational materials based on their queries or uploaded images.
 
+<img src="https://canvas-crawler.soyrun.workers.dev/frontend.png" alt="Canvas Crawler" width="500">
+
 ## Features
 
 - **Intelligent Course Matching**: Uses Google Gemini AI to analyze student queries and match them to relevant courses

@@ -46,4 +46,7 @@ export interface ResourceAnalysis {
 export interface Env {
   CANVAS_API_KEY: string;
   GOOGLE_API_KEY: string;
+  ASSETS: {
+    fetch: (request: Request) => Promise<Response>;
+  };
 }
